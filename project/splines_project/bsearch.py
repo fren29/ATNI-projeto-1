@@ -19,7 +19,7 @@ def find_interval(nodes, target):
 
     # Caso especial: target exatamente no último nó
     if target == last_node:
-        return total_nodes - 2  # intervalo [n-2, n-1]
+        return total_nodes - 2
 
     left_index = 0
     right_index = total_nodes - 1
