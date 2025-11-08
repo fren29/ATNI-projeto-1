@@ -1,3 +1,6 @@
+from gauss import solve_by_gaussian_elimination
+
+
 def build_tridiagonal_system(x, y, bc="natural", ypp0=0.0, yppn=0.0):
     """
     Monta o sistema linear tridiagonal T·M = d do spline cúbico interpolador.
@@ -62,10 +65,46 @@ def build_tridiagonal_system(x, y, bc="natural", ypp0=0.0, yppn=0.0):
     return T, d
 
 
-def compute_M(T, d, solver):
-    """Usa solver(A,b)->x para obter M."""
-    # TODO
-    pass
+def compute_M(T, d, solver=solve_by_gaussian_elimination):
+    """
+    Resolve o sistema linear T·M = d para obter o vetor de segundas derivadas M.
+
+    Origem: Algoritmo 1 — Eliminação de Gauss (PDF, p. 4).
+
+    Parâmetros
+    ----------
+    T : list[list[float]]
+        Matriz quadrada (n+1)x(n+1) tridiagonal.
+    d : list[float]
+        Vetor (n+1) do termo independente.
+    solver : callable
+        Função para resolver sistema linear Ax = b.
+        Padrão: solve_by_gaussian_elimination do módulo gauss.
+
+    Retorno
+    -------
+    M : list[float]
+        Vetor solução (segundas derivadas nos nós x_i).
+    """
+    # Copia profunda para não alterar T nem d originais
+    A = [row[:] for row in T]
+    b = d[:]
+    n = len(A)
+
+    # Sanidade básica
+    for i in range(n):
+        if len(A[i]) != n:
+            raise ValueError("Matriz T deve ser quadrada (n x n).")
+    if len(b) != n:
+        raise ValueError("Dimensão inconsistente entre T e d.")
+
+    # Chama o solver definido
+    M = solver(A, b)
+
+    # Garantir formato lista de floats
+    M = [float(val) for val in M]
+    return M
+
 
 def compute_AB(x, y, M):
     """Calcula coeficientes A_i e B_i para cada intervalo."""
@@ -82,10 +121,12 @@ def spline_function(x, y, bc="natural", ypp0=0.0, yppn=0.0, solver=None, locator
     # TODO
     pass
 
+
+# Exemplo pequeno
 x = [0.0, 1.0, 2.0]
 y = [0.0, 1.0, 0.0]
-T, d = build_tridiagonal_system(x, y, bc="natural")
 
-print("T =")
-for row in T: print(row)
-print("d =", d)
+T, d = build_tridiagonal_system(x, y)
+M = compute_M(T, d)
+
+print("Vetor M:", M)
