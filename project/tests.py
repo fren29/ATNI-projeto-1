@@ -80,6 +80,25 @@ def test_gauss_tridiagonal_4x4():
     x = solve(A, b)
     assert almost_equal_list(x, expected, tol=1e-10)
 
+def test_compute_M_basic():
+    from splines_project.spline import build_tridiagonal_system, compute_M
+    x = [0.0, 1.0, 2.0]
+    y = [0.0, 1.0, 0.0]
+    T, d = build_tridiagonal_system(x, y)
+    M = compute_M(T, d)
+    assert all(abs(a - b) < 1e-12 for a, b in zip(M, [0.0, -3.0, 0.0]))
+
+
+def test_compute_AB_basic():
+    from splines_project.spline import build_tridiagonal_system, compute_M, compute_AB
+    x = [0.0, 1.0, 2.0]
+    y = [0.0, 1.0, 0.0]
+    T, d = build_tridiagonal_system(x, y)
+    M = compute_M(T, d)
+    A, B = compute_AB(x, y, M)
+    assert all(abs(a - b) < 1e-12 for a, b in zip(A, [-0.5, 0.5]))
+    assert all(abs(a - b) < 1e-12 for a, b in zip(B, [0.0, -1.5]))
+
 def run_all():
     # chama todas as funções que começam com test_
     import inspect, sys

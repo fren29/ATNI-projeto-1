@@ -105,11 +105,43 @@ def compute_M(T, d, solver=solve_by_gaussian_elimination):
     M = [float(val) for val in M]
     return M
 
-
 def compute_AB(x, y, M):
-    """Calcula coeficientes A_i e B_i para cada intervalo."""
-    # TODO
-    pass
+    """
+    Calcula os coeficientes A_i e B_i do spline cúbico interpolador.
+
+    Origem: Eq. (3) — PDF (p. 4).
+
+    Para cada i = 0..n-1, com h_i = x_{i+1} - x_i:
+        A_i = (M_{i+1} - M_i) / (6*h_i)
+        B_i = M_i / 2
+
+    Parâmetros
+    ----------
+    x, y : listas (n+1) de floats
+    M : lista (n+1) de floats, segundas derivadas
+
+    Retorno
+    -------
+    A, B : listas (n) de floats
+    """
+    n = len(x) - 1
+    if not (len(y) == len(x) == len(M)):
+        raise ValueError("x, y e M devem ter o mesmo comprimento.")
+
+    h = [x[i+1] - x[i] for i in range(n)]
+    if any(hi <= 0 for hi in h):
+        raise ValueError("x deve ser estritamente crescente.")
+
+    A, B = [], []
+    for i in range(n):
+        hi = h[i]
+        Ai = (M[i+1] - M[i]) / (6.0 * hi)
+        Bi = M[i] / 2.0
+        A.append(Ai)
+        B.append(Bi)
+
+    return A, B
+
 
 def spline_eval(x, y, M, A, B, x_star, locator):
     """Avalia S(x_star) usando a busca binária."""
@@ -128,5 +160,7 @@ y = [0.0, 1.0, 0.0]
 
 T, d = build_tridiagonal_system(x, y)
 M = compute_M(T, d)
+A, B = compute_AB(x, y, M)
 
-print("Vetor M:", M)
+print("A =", A)
+print("B =", B)
