@@ -99,6 +99,17 @@ def test_compute_AB_basic():
     assert all(abs(a - b) < 1e-12 for a, b in zip(A, [-0.5, 0.5]))
     assert all(abs(a - b) < 1e-12 for a, b in zip(B, [0.0, -1.5]))
 
+def test_spline_eval_basic():
+    from splines_project.spline import build_tridiagonal_system, compute_M, compute_AB, spline_eval
+    x = [0.0, 1.0, 2.0]
+    y = [0.0, 1.0, 0.0]
+    T, d = build_tridiagonal_system(x, y)
+    M = compute_M(T, d)
+    A, B = compute_AB(x, y, M)
+    Sx = spline_eval(x, y, M, A, B, 0.5)
+    assert abs(Sx - 0.6875) < 1e-6
+
+
 def run_all():
     # chama todas as funções que começam com test_
     import inspect, sys

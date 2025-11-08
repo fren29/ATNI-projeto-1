@@ -143,10 +143,56 @@ def compute_AB(x, y, M):
     return A, B
 
 
-def spline_eval(x, y, M, A, B, x_star, locator):
-    """Avalia S(x_star) usando a busca binária."""
-    # TODO
-    pass
+from bsearch import find_interval
+
+def spline_eval(x, y, M, A, B, x_star, locator=find_interval):
+    """
+    Avalia o spline cúbico interpolador em um ponto x_star.
+
+    Origem: Eq. (1) — PDF (p. 2)
+
+    Para o subintervalo [x_i, x_{i+1}] tal que x_i ≤ x_star ≤ x_{i+1}:
+        S_i(x) = (M_i*(x_{i+1}-x)^3)/(6*h_i)
+                + (M_{i+1}*(x-x_i)^3)/(6*h_i)
+                + ((y_i/h_i) - (M_i*h_i)/6)*(x_{i+1}-x)
+                + ((y_{i+1}/h_i) - (M_{i+1}*h_i)/6)*(x-x_i)
+
+    Parâmetros
+    ----------
+    x, y, M, A, B : listas do spline
+    x_star : float
+        Ponto a avaliar
+    locator : callable
+        Função para localizar o índice i tal que x ∈ [x_i, x_{i+1}]
+        Padrão: bsearch.find_interval
+
+    Retorno
+    -------
+    Sx : float
+        Valor do spline em x_star
+    """
+    n = len(x) - 1
+    if not (len(y) == len(M) == len(x)):
+        raise ValueError("x, y e M devem ter o mesmo comprimento.")
+    if len(A) != n or len(B) != n:
+        raise ValueError("A e B devem ter n elementos (n = len(x)-1).")
+    if not (x[0] <= x_star <= x[-1]):
+        raise ValueError(f"x_star={x_star} fora do domínio [{x[0]}, {x[-1]}].")
+
+    i = locator(x, x_star)  # índice tal que x[i] ≤ x_star ≤ x[i+1]
+    hi = x[i+1] - x[i]
+    xi, xi1 = x[i], x[i+1]
+    yi, yi1 = y[i], y[i+1]
+    Mi, Mi1 = M[i], M[i+1]
+
+    term1 = Mi * (xi1 - x_star)**3 / (6.0 * hi)
+    term2 = Mi1 * (x_star - xi)**3 / (6.0 * hi)
+    term3 = (yi / hi - Mi * hi / 6.0) * (xi1 - x_star)
+    term4 = (yi1 / hi - Mi1 * hi / 6.0) * (x_star - xi)
+
+    Sx = term1 + term2 + term3 + term4
+    return Sx
+
 
 def spline_function(x, y, bc="natural", ypp0=0.0, yppn=0.0, solver=None, locator=None):
     """Retorna um callable S(x_star)."""
@@ -157,10 +203,9 @@ def spline_function(x, y, bc="natural", ypp0=0.0, yppn=0.0, solver=None, locator
 # Exemplo pequeno
 x = [0.0, 1.0, 2.0]
 y = [0.0, 1.0, 0.0]
-
 T, d = build_tridiagonal_system(x, y)
 M = compute_M(T, d)
 A, B = compute_AB(x, y, M)
 
-print("A =", A)
-print("B =", B)
+for x_star in [0.0, 0.5, 1.0, 1.5, 2.0]:
+    print(f"S({x_star}) = {spline_eval(x, y, M, A, B, x_star):.6f}")
