@@ -3,10 +3,12 @@ from spline import (
     build_tridiagonal_system,
     compute_M,
     compute_AB,
-    spline_eval
+    spline_eval,
+    spline_function
 )
-from utils import assert_strictly_increasing
-
+from utils import assert_strictly_increasing, make_uniform_mesh, sup_error
+import numpy as np
+from spline import spline_function
 
 def tarefa_validar_pontos_exemplo():
     """
@@ -48,9 +50,54 @@ def tarefa_validar_pontos_exemplo():
     for x_star in xs_test:
         Sx = spline_eval(x, y, M, A, B, x_star)
         print(f"S({x_star:6.2f}) = {Sx:12.8f}")
-tarefa_validar_pontos_exemplo()
 
-def tarefa_convergencia(f, a, b, ns):
-    """Estudo empírico de convergência."""
-    # TODO
-    pass
+#tarefa_validar_pontos_exemplo()
+
+def tarefa_convergencia(f, a, b, ns, bc="natural"):
+    """
+    Estuda empiricamente a convergência do spline cúbico interpolador.
+
+    Para cada n em ns:
+      1. Gera malha uniforme [a,b] com n subintervalos.
+      2. Constrói spline cúbico S_n(x) com condição bc.
+      3. Calcula erro máximo E_n = max |f(x) - S_n(x)| em malha densa.
+      4. Exibe tabela com (n, h, E_n).
+
+    Parâmetros
+    ----------
+    f : callable
+        Função original a interpolar.
+    a, b : floats
+        Intervalo de definição.
+    ns : list[int]
+        Tamanhos de malha (ex.: [4, 8, 16, 32, 64]).
+    bc : str
+        Condição de contorno ("natural" ou "complete").
+    """
+    print(f"\n=== Estudo de Convergência do Spline Cúbico ({bc}) ===")
+    print(f"{'n':>6} {'h':>12} {'E_n':>16}")
+
+    results = []
+    for n in ns:
+        xs = make_uniform_mesh(a, b, n)
+        ys = f(xs)
+        S = spline_function(xs.tolist(), ys.tolist(), bc=bc)
+
+        # Malha densa para medir erro
+        xs_dense = np.linspace(a, b, 2000)
+        E_n = sup_error(f, S, xs_dense)
+
+        h = (b - a) / n
+        results.append((n, h, E_n))
+        print(f"{n:6d} {h:12.6e} {E_n:16.8e}")
+
+    return results
+
+from tarefas import tarefa_convergencia
+import numpy as np
+
+f = np.cos
+a, b = 0.0, np.pi / 2
+ns = [4, 8, 16, 32, 64]
+
+tarefa_convergencia(f, a, b, ns, bc="natural")
