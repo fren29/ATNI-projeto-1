@@ -109,6 +109,17 @@ def test_spline_eval_basic():
     Sx = spline_eval(x, y, M, A, B, 0.5)
     assert abs(Sx - 0.6875) < 1e-6
 
+def test_spline_function_basic():
+    from spline import spline_function
+    x = [0.0, 1.0, 2.0]
+    y = [0.0, 1.0, 0.0]
+    S = spline_function(x, y)
+    # interpolação exata nos nós
+    for xi, yi in zip(x, y):
+        assert abs(S(xi) - yi) < 1e-12
+    # ponto intermediário
+    assert abs(S(0.5) - 0.6875) < 1e-6
+
 
 def run_all():
     # chama todas as funções que começam com test_

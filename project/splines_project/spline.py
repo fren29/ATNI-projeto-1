@@ -194,18 +194,51 @@ def spline_eval(x, y, M, A, B, x_star, locator=find_interval):
     return Sx
 
 
-def spline_function(x, y, bc="natural", ypp0=0.0, yppn=0.0, solver=None, locator=None):
-    """Retorna um callable S(x_star)."""
-    # TODO
-    pass
+def spline_function(x, y, bc="natural", ypp0=0.0, yppn=0.0, solver=solve_by_gaussian_elimination):
+    """
+    Constrói e retorna uma função callable S(x_star) que avalia o spline cúbico interpolador.
+
+    Junta todos os passos:
+        1. Monta o sistema T·M = d (Eq. 2 – PDF, p. 3)
+        2. Resolve via eliminação de Gauss (Alg. 1 – PDF, p. 4)
+        3. Calcula A_i e B_i (Eq. 3 – PDF, p. 4)
+        4. Avalia S(x*) conforme Eq. 1 (PDF, p. 2)
+
+    Parâmetros
+    ----------
+    x, y : listas de floats
+        Pontos de interpolação (mesmo tamanho)
+    bc : str
+        Condição de contorno ("natural" ou "complete")
+    ypp0, yppn : floats
+        Segundas derivadas nos extremos (usadas se bc="complete")
+    solver : callable
+        Função de resolução de sistemas lineares (padrão: gauss.solve_by_gaussian_elimination)
+
+    Retorno
+    -------
+    S : callable
+        Função S(x_star) que avalia o spline cúbico interpolador.
+    """
+    # Passos fundamentais
+    T, d = build_tridiagonal_system(x, y, bc, ypp0, yppn)
+    M = compute_M(T, d, solver)
+    A, B = compute_AB(x, y, M)
+
+    def S(x_star):
+        return spline_eval(x, y, M, A, B, x_star)
+
+    return S
+
 
 
 # Exemplo pequeno
+from spline import spline_function
+
 x = [0.0, 1.0, 2.0]
 y = [0.0, 1.0, 0.0]
-T, d = build_tridiagonal_system(x, y)
-M = compute_M(T, d)
-A, B = compute_AB(x, y, M)
+
+S = spline_function(x, y)
 
 for x_star in [0.0, 0.5, 1.0, 1.5, 2.0]:
-    print(f"S({x_star}) = {spline_eval(x, y, M, A, B, x_star):.6f}")
+    print(f"S({x_star}) = {S(x_star):.6f}")
