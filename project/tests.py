@@ -110,7 +110,7 @@ def test_spline_eval_basic():
     assert abs(Sx - 0.6875) < 1e-6
 
 def test_spline_function_basic():
-    from spline import spline_function
+    from splines_project.spline import spline_function
     x = [0.0, 1.0, 2.0]
     y = [0.0, 1.0, 0.0]
     S = spline_function(x, y)
@@ -119,6 +119,23 @@ def test_spline_function_basic():
         assert abs(S(xi) - yi) < 1e-12
     # ponto intermediário
     assert abs(S(0.5) - 0.6875) < 1e-6
+
+def test_assert_strictly_increasing_valid():
+    from splines_project.utils import assert_strictly_increasing
+    assert assert_strictly_increasing([0, 1, 2, 3])
+
+def test_assert_strictly_increasing_invalid():
+    from splines_project.utils import assert_strictly_increasing
+    import pytest
+    with pytest.raises(ValueError):
+        assert_strictly_increasing([0, 1, 1])
+
+def test_make_uniform_mesh_basic():
+    from splines_project.utils import make_uniform_mesh
+    import numpy as np
+    xs = make_uniform_mesh(0.0, 1.0, 4)
+    expected = np.array([0.0, 0.25, 0.5, 0.75, 1.0])
+    assert np.allclose(xs, expected)
 
 
 def run_all():
