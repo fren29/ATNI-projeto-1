@@ -192,7 +192,7 @@ from pathlib import Path
 import datetime
 
 def gerar_relatorio(results_natural, results_completo, rho_natural, rho_completo,
-                    fig_nat="convergencia_natural.png", fig_comp="convergencia_completo.png"):
+                    fig_nat="./convergencia_natural.png", fig_comp="./convergencia_completo.png"):
     """
     Gera report.md com formatação compatível com Pandoc/pdflatex.
     - Usa raw strings (r'...' ou r'''...''') nos blocos com LaTeX.
@@ -213,6 +213,49 @@ def gerar_relatorio(results_natural, results_completo, rho_natural, rho_completo
 
     # Bloco com LaTeX → raw string (r"""...""")
     md += r"""## 1. Introdução
+
+### 1.1 Fundamentação Teórica
+
+O spline cúbico interpolador é uma função polinomial por partes \(S(x)\) de classe \(C^2[a,b]\),
+isto é, contínua juntamente com suas primeiras e segundas derivadas em todo o domínio.
+Cada subintervalo \([x_i, x_{i+1}]\) é associado a um polinômio cúbico da forma:
+
+\[
+S_i(x) = a_i + b_i (x-x_i) + c_i (x-x_i)^2 + d_i (x-x_i)^3,
+\]
+de modo que:
+\[
+S_i(x_i) = y_i, \quad S_i(x_{i+1}) = y_{i+1}, \quad
+S_i'(x_{i+1}) = S_{i+1}'(x_{i+1}), \quad S_i''(x_{i+1}) = S_{i+1}''(x_{i+1}).
+\]
+
+Essas condições garantem a suavidade global da interpolação, e o sistema tridiagonal
+resultante é derivado dessas equações de continuidade de segunda ordem.
+
+Fisicamente, o spline cúbico natural corresponde à curva de **menor energia elástica** 
+que passa por todos os pontos \((x_i, y_i)\).
+Isso equivale a minimizar o funcional:
+\[
+E[S] = \int_a^b [S''(x)]^2 \, dx,
+\]
+que mede a curvatura média da função.
+
+Do ponto de vista analítico, se \(f \in C^4[a,b]\), então o erro de interpolação satisfaz:
+\[
+|f(x) - S(x)| \leq \frac{5}{384} h^4 \max_{\xi \in [a,b]} |f^{(4)}(\xi)|,
+\]
+mostrando que o spline cúbico completo é de **ordem de convergência 4**,
+enquanto o spline natural pode exibir comportamento \(O(h^2)\) próximo das fronteiras
+caso as segundas derivadas não se anulem.
+
+A teoria, portanto, prevê:
+\[
+E_n \approx C h^\rho, \quad \text{com } \rho \approx 4.
+\]
+
+Essa relação será validada empiricamente nas seções seguintes.
+
+### 1.2 Objetivo do Estudo
 
 Este relatório apresenta o estudo numérico da convergência de *splines cúbicos interpoladores*,
 verificando empiricamente a ordem de convergência teórica do método.
@@ -239,6 +282,11 @@ Principais funções:
 Validação em $f(x)=\cos(x)$, no intervalo $[0,\pi/2]$,
 com condições de contorno **natural** e **completa**.
 
+---
+
+---
+A seguir, apresentamos os resultados obtidos para o estudo de convergência empírica
+do spline cúbico nas versões natural e completa, comparando os erros e ordens estimadas.
 ---
 
 ## 3. Resultados Numéricos
@@ -298,6 +346,12 @@ evidenciando a importância das condições de contorno no desempenho global.
 **Conclusão:** o spline cúbico completo é um método de alta precisão para interpolação suave.
 
 ---
+## 5. Referências
+
+- Burden, R. L. & Faires, J. D. *Análise Numérica*, 10ª ed., Cengage, 2016.  
+- Kiusalaas, J. *Numerical Methods in Engineering with Python 3*, Cambridge University Press, 2013.  
+- Camargo, A. P. (2025). *Notas de Aula — Aproximação Teórica e Numérica I (UFABC)*.
+
 """
 
     Path("report.md").write_text(md, encoding="utf-8")
@@ -346,22 +400,56 @@ def gerar_pdf(template_tex: str | None = "ufabc-template.tex"):
     print(f"✅ PDF gerado com sucesso em {pdf_path.resolve()}")
 
 
-gerar_pdf()
-# from tarefas import tarefa_convergencia, tarefa_convergencia_completa, ajuste_ordem_convergencia, gerar_relatorio
-# import numpy as np
+#gerar_pdf()
 
-# f  = np.cos
-# df = lambda x: -np.sin(x)
-# a, b = 0.0, np.pi/2
-# ns = [4, 8, 16, 32, 64]
+def tarefa_tabela1():
+    """
+    Tarefa 1 — Tabela 1 do Enunciado (Prof. André Pierro, UFABC 2025)
+    -----------------------------------------------------------------
+    Reproduz os valores dados no PDF do projeto (Tabela 1) e avalia
+    o spline cúbico interpolador (condição natural).
 
-# # Natural
-# results_nat = tarefa_convergencia(f, a, b, ns)
-# rho_nat = ajuste_ordem_convergencia(results_nat, "Spline Natural")
+    Dados:
+        xᵢ = [-0.9, -0.83, -0.6, -0.49, 0.0, 0.2, 0.6, 0.83]
+        yᵢ = [0.0, 1.0, 2.4, 4.1, 6.0, 8.2, 10.6, 13.4]
 
-# # Completo
-# results_compl = tarefa_convergencia_completa(f, df, a, b, ns)
-# rho_compl = ajuste_ordem_convergencia(results_compl, "Spline Completo")
+    Objetivo:
+        - Montar o spline cúbico natural.
+        - Avaliar S(x) em pontos intermediários.
+        - Imprimir tabela de valores interpolados.
+    """
+    import numpy as np
+    from spline import spline_function
 
-# # Gera o relatório final
-# gerar_relatorio(results_nat, results_compl, rho_nat, rho_compl, figura_loglog="convergencia.png")
+    x = [-0.9, -0.83, -0.6, -0.49, 0.0, 0.2, 0.6, 0.83]
+    y = [0.0, 1.0, 2.4, 4.1, 6.0, 8.2, 10.6, 13.4]
+
+    S = spline_function(x, y, bc="natural")
+
+    print("\n=== Tarefa 1 — Tabela 1 do Enunciado ===")
+    print(f"{'x':>8} | {'S(x)':>12}")
+    print("-" * 24)
+
+    xs_test = np.linspace(min(x), max(x), 15)
+    for xi in xs_test:
+        print(f"{xi:8.3f} | {S(xi):12.6f}")
+#tarefa_tabela1()
+
+from tarefas import tarefa_convergencia, tarefa_convergencia_completa, ajuste_ordem_convergencia, gerar_relatorio
+import numpy as np
+
+f  = np.cos
+df = lambda x: -np.sin(x)
+a, b = 0.0, np.pi/2
+ns = [4, 8, 16, 32, 64]
+
+# Natural
+results_nat = tarefa_convergencia(f, a, b, ns)
+rho_nat = ajuste_ordem_convergencia(results_nat, "Spline Natural")
+
+# Completo
+results_compl = tarefa_convergencia_completa(f, df, a, b, ns)
+rho_compl = ajuste_ordem_convergencia(results_compl, "Spline Completo")
+
+# Gera o relatório final
+gerar_relatorio(results_nat, results_compl, rho_nat, rho_compl)
