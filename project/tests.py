@@ -151,6 +151,15 @@ def test_tarefa_validar_runs():
     # A função deve rodar sem erros e imprimir resultados
     tarefa_validar_pontos_exemplo()
 
+def test_tarefa_convergencia_completa_runs():
+    from splines_project.tarefas import tarefa_convergencia_completa
+    import numpy as np
+    f  = np.cos
+    df = lambda x: -np.sin(x)
+    results = tarefa_convergencia_completa(f, df, 0, np.pi/2, [4, 8])
+    assert len(results) == 2
+    assert all(E > 0 for _, _, E in results)
+
 
 def run_all():
     # chama todas as funções que começam com test_

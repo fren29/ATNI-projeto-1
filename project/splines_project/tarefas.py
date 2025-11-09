@@ -93,11 +93,54 @@ def tarefa_convergencia(f, a, b, ns, bc="natural"):
 
     return results
 
-from tarefas import tarefa_convergencia
+import numpy as np
+from utils import make_uniform_mesh, sup_error
+from spline import spline_function
+
+def tarefa_convergencia_completa(f, df, a, b, ns):
+    """
+    Estuda empiricamente a convergência do spline cúbico completo,
+    com derivadas exatas nas extremidades.
+
+    Parâmetros
+    ----------
+    f : callable
+        Função original.
+    df : callable
+        Derivada primeira exata de f.
+    a, b : floats
+        Intervalo de definição.
+    ns : list[int]
+        Números de subintervalos.
+    """
+    print(f"\n=== Estudo de Convergência do Spline Cúbico (completo) ===")
+    print(f"{'n':>6} {'h':>12} {'E_n':>16}")
+
+    results = []
+    for n in ns:
+        xs = make_uniform_mesh(a, b, n)
+        ys = f(xs)
+        S = spline_function(xs.tolist(), ys.tolist(),
+                            bc="complete",
+                            ypp0=df(a),
+                            yppn=df(b))
+
+        xs_dense = np.linspace(a, b, 2000)
+        E_n = sup_error(f, S, xs_dense)
+
+        h = (b - a) / n
+        results.append((n, h, E_n))
+        print(f"{n:6d} {h:12.6e} {E_n:16.8e}")
+
+    return results
+
+
+from tarefas import tarefa_convergencia_completa
 import numpy as np
 
-f = np.cos
+f  = np.cos
+df = lambda x: -np.sin(x)
 a, b = 0.0, np.pi / 2
 ns = [4, 8, 16, 32, 64]
 
-tarefa_convergencia(f, a, b, ns, bc="natural")
+tarefa_convergencia_completa(f, df, a, b, ns)
