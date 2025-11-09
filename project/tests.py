@@ -146,6 +146,11 @@ def test_sup_error_cosine():
     E = sup_error(f, g, xs)
     assert abs(E - 0.001) < 1e-6
 
+def test_tarefa_validar_runs():
+    from splines_project.tarefas import tarefa_validar_pontos_exemplo
+    # A função deve rodar sem erros e imprimir resultados
+    tarefa_validar_pontos_exemplo()
+
 
 def run_all():
     # chama todas as funções que começam com test_
