@@ -134,8 +134,57 @@ def tarefa_convergencia_completa(f, df, a, b, ns):
 
     return results
 
+import numpy as np
+import matplotlib.pyplot as plt
 
-from tarefas import tarefa_convergencia_completa
+def ajuste_ordem_convergencia(results, titulo="Spline Cúbico"):
+    """
+    Estima numericamente a ordem de convergência ρ a partir de (h, E_n).
+
+    Parâmetros
+    ----------
+    results : list of tuples (n, h, E_n)
+        Saída das funções tarefa_convergencia ou tarefa_convergencia_completa.
+    titulo : str
+        Título do gráfico (opcional).
+
+    Retorno
+    -------
+    rho : float
+        Estimativa da ordem de convergência.
+    """
+    # Extrai vetores
+    hs  = np.array([h for _, h, _ in results])
+    Es  = np.array([E for _, _, E in results])
+
+    logh = np.log(hs)
+    logE = np.log(Es)
+
+    # Ajuste linear: logE = α + ρ·logh
+    A = np.vstack([logh, np.ones_like(logh)]).T
+    rho, alpha = np.linalg.lstsq(A, logE, rcond=None)[0]
+
+    # Exibe resultados
+    print("\n=== Ajuste log–log de Convergência ===")
+    print(f"ρ (ordem estimada) = {rho:8.4f}")
+    print(f"Coeficiente linear  = {alpha:8.4f}")
+    print(f"Relação estimada: log(E) ≈ {alpha:.4f} + {rho:.4f}·log(h)")
+
+    # Plot log–log
+    plt.figure(figsize=(6,4))
+    plt.plot(logh, logE, "o", label="dados numéricos")
+    plt.plot(logh, alpha + rho*logh, "-", label=f"ajuste linear (ρ={rho:.2f})")
+    plt.xlabel("log(h)")
+    plt.ylabel("log(E_n)")
+    plt.title(f"Convergência {titulo}")
+    plt.grid(True, linestyle="--", alpha=0.6)
+    plt.legend()
+    plt.tight_layout()
+    plt.show()
+
+    return rho
+
+from tarefas import tarefa_convergencia_completa, ajuste_ordem_convergencia
 import numpy as np
 
 f  = np.cos
@@ -143,4 +192,6 @@ df = lambda x: -np.sin(x)
 a, b = 0.0, np.pi / 2
 ns = [4, 8, 16, 32, 64]
 
-tarefa_convergencia_completa(f, df, a, b, ns)
+results = tarefa_convergencia_completa(f, df, a, b, ns)
+rho = ajuste_ordem_convergencia(results, titulo="Spline Completo")
+print(f"Ordem estimada: ρ ≈ {rho:.3f}")
