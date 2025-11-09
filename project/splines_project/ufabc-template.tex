@@ -1,0 +1,140 @@
+% ============================================================
+% Template LaTeX UFABC — Projeto 1 de Aproximação Teórica e Numérica I
+% Compatível com Pandoc 3.x, MiKTeX, Overleaf e LuaLaTeX
+% ============================================================
+
+\documentclass[12pt,a4paper]{article}
+
+% ----------------------------
+% Pacotes fundamentais
+% ----------------------------
+\usepackage[brazil]{babel}
+\usepackage[utf8]{inputenc}
+\usepackage[T1]{fontenc}
+\usepackage{lmodern}
+\usepackage{geometry}
+\usepackage{setspace}
+\usepackage{graphicx}
+\usepackage{amsmath, amssymb}
+\usepackage{booktabs}
+\usepackage{longtable}
+\usepackage{array}
+\usepackage{calc}
+\usepackage{etoolbox}
+\usepackage{xcolor}
+\usepackage{hyperref}
+\usepackage{fancyhdr}
+\usepackage{titling}
+\usepackage{titlesec}
+
+% ============================================================
+% CONFIGURAÇÕES DE PÁGINA E ESTILO
+% ============================================================
+\geometry{a4paper, margin=2.5cm}
+\onehalfspacing
+
+% Cabeçalho e rodapé
+\pagestyle{fancy}
+\fancyhf{}
+\lhead{UFABC — Aproximação Teórica e Numérica I}
+\rhead{\thepage}
+\renewcommand{\headrulewidth}{0.4pt}
+\renewcommand{\footrulewidth}{0pt}
+
+% Cores e links
+\definecolor{ufabcgreen}{RGB}{0,102,51}
+\hypersetup{
+    colorlinks=true,
+    linkcolor=ufabcgreen,
+    urlcolor=ufabcgreen,
+    citecolor=ufabcgreen,
+    pdfauthor={Rodrigo Fassa et al.},
+    pdftitle={Projeto 1 — Aproximação Teórica e Numérica I}
+}
+
+% Títulos verdes
+\titleformat{\section}{\large\bfseries\color{ufabcgreen}}{\thesection.}{0.5em}{}
+\titleformat{\subsection}{\normalsize\bfseries\color{ufabcgreen}}{\thesubsection}{0.5em}{}
+
+% Capa personalizada
+\pretitle{
+    \begin{center}
+    \vspace*{3cm}
+    \includegraphics[width=0.25\textwidth]{logo_ufabc.png}\\[1.5cm]
+    \LARGE\bfseries
+}
+\posttitle{
+    \end{center}
+    \vspace{1cm}
+}
+\setlength{\droptitle}{-2cm}
+
+% ============================================================
+% CORREÇÕES PANDOC
+% ============================================================
+
+% --- 1. Corrige "No counter 'none' defined" ---
+\makeatletter
+\@ifundefined{c@none}{\newcounter{none}}{}
+\makeatother
+
+\usepackage{graphicx}
+
+\makeatletter
+\newcommand{\pandocbounded}[1]{%
+  \begingroup
+    \edef\tempfilename{\detokenize{#1}}% trata o caminho literalmente
+    \IfFileExists{\tempfilename}{%
+      \begin{center}
+        \includegraphics[width=0.8\linewidth]{\tempfilename}%
+      \end{center}
+    }{%
+      \begin{center}
+        \fbox{\textbf{[Imagem não encontrada:} \texttt{\detokenize{#1}}\textbf{]}}
+      \end{center}
+    }%
+  \endgroup
+}
+\makeatother
+
+
+% -------------------------------------------------------------------
+
+
+% ============================================================
+% DOCUMENTO
+% ============================================================
+\begin{document}
+
+% CAPA
+\title{
+Projeto 1 — Aproximação Teórica e Numérica I\\[0.5cm]
+\large Estudo sobre a Convergência de Splines Cúbicos Interpoladores
+}
+\author{
+Rodrigo Fassa et al.\\[0.3cm]
+Orientador: Prof. André Pierro de Camargo
+}
+\date{Novembro de 2025}
+
+\maketitle
+\thispagestyle{empty}
+\newpage
+
+% SUMÁRIO
+\tableofcontents
+\newpage
+
+% CONTEÚDO DO PANDOC
+$body$
+
+% RODAPÉ INSTITUCIONAL
+\vfill
+\begin{center}
+{\footnotesize
+Universidade Federal do ABC — Centro de Engenharia, Modelagem e Ciências Sociais Aplicadas (CECS)\\
+Santo André, SP — Brasil, 2025
+}
+\end{center}
+
+\end{document}

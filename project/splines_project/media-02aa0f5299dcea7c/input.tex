@@ -1,0 +1,212 @@
+% Options for packages loaded elsewhere
+\PassOptionsToPackage{unicode}{hyperref}
+\PassOptionsToPackage{hyphens}{url}
+\documentclass[
+]{article}
+\usepackage{xcolor}
+\usepackage{amsmath,amssymb}
+\setcounter{secnumdepth}{5}
+\usepackage{iftex}
+\ifPDFTeX
+  \usepackage[T1]{fontenc}
+  \usepackage[utf8]{inputenc}
+  \usepackage{textcomp} % provide euro and other symbols
+\else % if luatex or xetex
+  \usepackage{unicode-math} % this also loads fontspec
+  \defaultfontfeatures{Scale=MatchLowercase}
+  \defaultfontfeatures[\rmfamily]{Ligatures=TeX,Scale=1}
+\fi
+\usepackage{lmodern}
+\ifPDFTeX\else
+  % xetex/luatex font selection
+\fi
+% Use upquote if available, for straight quotes in verbatim environments
+\IfFileExists{upquote.sty}{\usepackage{upquote}}{}
+\IfFileExists{microtype.sty}{% use microtype if available
+  \usepackage[]{microtype}
+  \UseMicrotypeSet[protrusion]{basicmath} % disable protrusion for tt fonts
+}{}
+\makeatletter
+\@ifundefined{KOMAClassName}{% if non-KOMA class
+  \IfFileExists{parskip.sty}{%
+    \usepackage{parskip}
+  }{% else
+    \setlength{\parindent}{0pt}
+    \setlength{\parskip}{6pt plus 2pt minus 1pt}}
+}{% if KOMA class
+  \KOMAoptions{parskip=half}}
+\makeatother
+\usepackage{longtable,booktabs,array}
+\newcounter{none} % for unnumbered tables
+\usepackage{calc} % for calculating minipage widths
+% Correct order of tables after \paragraph or \subparagraph
+\usepackage{etoolbox}
+\makeatletter
+\patchcmd\longtable{\par}{\if@noskipsec\mbox{}\fi\par}{}{}
+\makeatother
+% Allow footnotes in longtable head/foot
+\IfFileExists{footnotehyper.sty}{\usepackage{footnotehyper}}{\usepackage{footnote}}
+\makesavenoteenv{longtable}
+\setlength{\emergencystretch}{3em} % prevent overfull lines
+\providecommand{\tightlist}{%
+  \setlength{\itemsep}{0pt}\setlength{\parskip}{0pt}}
+\usepackage{bookmark}
+\IfFileExists{xurl.sty}{\usepackage{xurl}}{} % add URL line breaks if available
+\urlstyle{same}
+\hypersetup{
+  hidelinks,
+  pdfcreator={LaTeX via pandoc}}
+
+\author{}
+\date{}
+
+\begin{document}
+
+{
+\setcounter{tocdepth}{3}
+\tableofcontents
+}
+\section{Projeto 1 — Aproximação Teórica e Numérica
+I}\label{projeto-1-aproximauxe7uxe3o-teuxf3rica-e-numuxe9rica-i}
+
+\subsubsection{Estudo sobre a Convergência de Splines Cúbicos
+Interpoladores}\label{estudo-sobre-a-converguxeancia-de-splines-cuxfabicos-interpoladores}
+
+\textbf{Autor:} Rodrigo Fassa et al.\\
+\textbf{Orientador:} Prof.~André Pierro de Camargo\\
+\textbf{Data:} 09/11/2025
+
+\begin{center}\rule{0.5\linewidth}{0.5pt}\end{center}
+
+\subsection{1. Introdução}\label{introduuxe7uxe3o}
+
+Este relatório apresenta o estudo numérico da convergência de
+\emph{splines cúbicos interpoladores}, com o objetivo de verificar
+experimentalmente a ordem de convergência teórica prevista para o
+método. O spline cúbico é uma função polinomial por partes, de classe
+(C\^{}2), construída de modo que a curvatura (segunda derivada) varie
+suavemente, minimizando a energia elástica da curva.
+
+A teoria garante que, se (f \in C\^{}4{[}a,b{]}), então o erro máximo
+satisfaz: {[} E\_n = \max\_\{x \in [a,b]\} \textbar f(x) -
+S(x)\textbar{} \approx C \cdot h\^{}4, {]} onde (h) é o espaçamento da
+malha.
+
+\begin{center}\rule{0.5\linewidth}{0.5pt}\end{center}
+
+\subsection{2. Metodologia}\label{metodologia}
+
+As rotinas foram implementadas em Python de acordo com o pseudocódigo do
+enunciado. As principais funções são:
+
+{\def\LTcaptype{none} % do not increment counter
+\begin{longtable}[]{@{}
+  >{\raggedright\arraybackslash}p{(\linewidth - 4\tabcolsep) * \real{0.2759}}
+  >{\raggedright\arraybackslash}p{(\linewidth - 4\tabcolsep) * \real{0.3103}}
+  >{\raggedright\arraybackslash}p{(\linewidth - 4\tabcolsep) * \real{0.4138}}@{}}
+\toprule\noalign{}
+\begin{minipage}[b]{\linewidth}\raggedright
+Módulo
+\end{minipage} & \begin{minipage}[b]{\linewidth}\raggedright
+Função
+\end{minipage} & \begin{minipage}[b]{\linewidth}\raggedright
+Descrição
+\end{minipage} \\
+\midrule\noalign{}
+\endhead
+\bottomrule\noalign{}
+\endlastfoot
+\texttt{spline.py} & \texttt{build\_tridiagonal\_system} & Monta o
+sistema (T\cdot M=d) para o spline cúbico. \\
+\texttt{gauss.py} & \texttt{solve\_by\_gaussian\_elimination} & Resolve
+o sistema linear. \\
+\texttt{spline.py} & \texttt{compute\_M}, \texttt{compute\_AB},
+\texttt{spline\_eval} & Calculam segundas derivadas e coeficientes. \\
+\texttt{tarefas.py} & \texttt{tarefa\_convergencia\_*} & Experimentos de
+convergência. \\
+\texttt{tarefas.py} & \texttt{ajuste\_ordem\_convergencia} & Estima
+(\rho) por regressão log–log. \\
+\end{longtable}
+}
+
+A validação foi feita sobre (f(x)=\cos(x)), em ({[}0, \pi/2{]}), usando
+as condições de contorno \textbf{natural} e \textbf{completa}.
+
+\begin{center}\rule{0.5\linewidth}{0.5pt}\end{center}
+
+\subsection{3. Resultados Numéricos}\label{resultados-numuxe9ricos}
+
+\subsubsection{3.1 Spline Natural}\label{spline-natural}
+
+{\def\LTcaptype{none} % do not increment counter
+\begin{longtable}[]{@{}rrr@{}}
+\toprule\noalign{}
+n & h & Eₙ \\
+\midrule\noalign{}
+\endhead
+\bottomrule\noalign{}
+\endlastfoot
+4 & 0.392699 & 7.725073e-03 \\
+8 & 0.196350 & 1.902205e-03 \\
+16 & 0.098175 & 4.737284e-04 \\
+32 & 0.049087 & 1.183202e-04 \\
+64 & 0.024544 & 2.957305e-05 \\
+\end{longtable}
+}
+
+\textbf{Ordem estimada:} ρ ≈ 2.01
+
+\begin{center}\rule{0.5\linewidth}{0.5pt}\end{center}
+
+\subsubsection{3.2 Spline Completo}\label{spline-completo}
+
+{\def\LTcaptype{none} % do not increment counter
+\begin{longtable}[]{@{}rrr@{}}
+\toprule\noalign{}
+n & h & Eₙ \\
+\midrule\noalign{}
+\endhead
+\bottomrule\noalign{}
+\endlastfoot
+4 & 0.392699 & 6.324039e-05 \\
+8 & 0.196350 & 3.889330e-06 \\
+16 & 0.098175 & 2.421787e-07 \\
+32 & 0.049087 & 1.512267e-08 \\
+64 & 0.024544 & 9.443273e-10 \\
+\end{longtable}
+}
+
+\textbf{Ordem estimada:} ρ ≈ 4.01
+
+\begin{center}\rule{0.5\linewidth}{0.5pt}\end{center}
+
+\subsubsection{3.3 Gráfico log–log}\label{gruxe1fico-loglog}
+
+\begin{figure}
+\centering
+{Convergência log–log}
+\caption{Convergência log–log}
+\end{figure}
+
+O gráfico evidencia uma relação linear entre log(Eₙ) e log(h), com
+inclinação próxima de 4.
+
+\begin{center}\rule{0.5\linewidth}{0.5pt}\end{center}
+
+\subsection{4. Discussão e Conclusão}\label{discussuxe3o-e-conclusuxe3o}
+
+Observou-se que o spline natural apresentou erro decaindo
+aproximadamente como (E\_n \sim h\^{}2), enquanto o spline completo
+atingiu a convergência teórica de quarta ordem ((ρ pprox 4)). A
+imposição das derivadas nas extremidades remove o viés de contorno e
+garante a suavidade global (C\^{}2).
+
+Assim, o comportamento numérico confirma a teoria apresentada em sala e
+conclui que o \emph{spline cúbico completo} é um método de alta precisão
+para interpolação suave.
+
+\begin{center}\rule{0.5\linewidth}{0.5pt}\end{center}
+
+\textbf{UFABC — Aproximação Teórica e Numérica I (2025/Q3)}
+
+\end{document}

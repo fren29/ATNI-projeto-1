@@ -80,6 +80,87 @@ def test_gauss_tridiagonal_4x4():
     x = solve(A, b)
     assert almost_equal_list(x, expected, tol=1e-10)
 
+def test_compute_M_basic():
+    from splines_project.spline import build_tridiagonal_system, compute_M
+    x = [0.0, 1.0, 2.0]
+    y = [0.0, 1.0, 0.0]
+    T, d = build_tridiagonal_system(x, y)
+    M = compute_M(T, d)
+    assert all(abs(a - b) < 1e-12 for a, b in zip(M, [0.0, -3.0, 0.0]))
+
+
+def test_compute_AB_basic():
+    from splines_project.spline import build_tridiagonal_system, compute_M, compute_AB
+    x = [0.0, 1.0, 2.0]
+    y = [0.0, 1.0, 0.0]
+    T, d = build_tridiagonal_system(x, y)
+    M = compute_M(T, d)
+    A, B = compute_AB(x, y, M)
+    assert all(abs(a - b) < 1e-12 for a, b in zip(A, [-0.5, 0.5]))
+    assert all(abs(a - b) < 1e-12 for a, b in zip(B, [0.0, -1.5]))
+
+def test_spline_eval_basic():
+    from splines_project.spline import build_tridiagonal_system, compute_M, compute_AB, spline_eval
+    x = [0.0, 1.0, 2.0]
+    y = [0.0, 1.0, 0.0]
+    T, d = build_tridiagonal_system(x, y)
+    M = compute_M(T, d)
+    A, B = compute_AB(x, y, M)
+    Sx = spline_eval(x, y, M, A, B, 0.5)
+    assert abs(Sx - 0.6875) < 1e-6
+
+def test_spline_function_basic():
+    from splines_project.spline import spline_function
+    x = [0.0, 1.0, 2.0]
+    y = [0.0, 1.0, 0.0]
+    S = spline_function(x, y)
+    # interpolação exata nos nós
+    for xi, yi in zip(x, y):
+        assert abs(S(xi) - yi) < 1e-12
+    # ponto intermediário
+    assert abs(S(0.5) - 0.6875) < 1e-6
+
+def test_assert_strictly_increasing_valid():
+    from splines_project.utils import assert_strictly_increasing
+    assert assert_strictly_increasing([0, 1, 2, 3])
+
+def test_assert_strictly_increasing_invalid():
+    from splines_project.utils import assert_strictly_increasing
+    import pytest
+    with pytest.raises(ValueError):
+        assert_strictly_increasing([0, 1, 1])
+
+def test_make_uniform_mesh_basic():
+    from splines_project.utils import make_uniform_mesh
+    import numpy as np
+    xs = make_uniform_mesh(0.0, 1.0, 4)
+    expected = np.array([0.0, 0.25, 0.5, 0.75, 1.0])
+    assert np.allclose(xs, expected)
+
+def test_sup_error_cosine():
+    import numpy as np
+    from splines_project.utils import sup_error
+    f = np.cos
+    g = lambda x: np.cos(x) + 0.001
+    xs = np.linspace(0, np.pi, 100)
+    E = sup_error(f, g, xs)
+    assert abs(E - 0.001) < 1e-6
+
+def test_tarefa_validar_runs():
+    from splines_project.tarefas import tarefa_validar_pontos_exemplo
+    # A função deve rodar sem erros e imprimir resultados
+    tarefa_validar_pontos_exemplo()
+
+def test_tarefa_convergencia_completa_runs():
+    from splines_project.tarefas import tarefa_convergencia_completa
+    import numpy as np
+    f  = np.cos
+    df = lambda x: -np.sin(x)
+    results = tarefa_convergencia_completa(f, df, 0, np.pi/2, [4, 8])
+    assert len(results) == 2
+    assert all(E > 0 for _, _, E in results)
+
+
 def run_all():
     # chama todas as funções que começam com test_
     import inspect, sys
