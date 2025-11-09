@@ -1,105 +1,114 @@
 % ============================================================
-% Template LaTeX UFABC — Projeto 1 de Aproximação Teórica e Numérica I
-% Compatível com Pandoc 3.x, MiKTeX, Overleaf e LuaLaTeX
+% Template UFABC — Projeto 1 (LuaLaTeX Edition — com fallbacks)
 % ============================================================
 
 \documentclass[12pt,a4paper]{article}
 
 % ----------------------------
-% Pacotes fundamentais
+% Pacotes modernos
 % ----------------------------
 \usepackage[brazil]{babel}
-\usepackage[utf8]{inputenc}
-\usepackage[T1]{fontenc}
-\usepackage{lmodern}
+\usepackage{fontspec}      % fontes OpenType
+\usepackage{unicode-math}  % fontes matemáticas
 \usepackage{geometry}
 \usepackage{setspace}
 \usepackage{graphicx}
-\usepackage{amsmath, amssymb}
 \usepackage{booktabs}
 \usepackage{longtable}
 \usepackage{array}
-\usepackage{calc}
-\usepackage{etoolbox}
 \usepackage{xcolor}
 \usepackage{hyperref}
 \usepackage{fancyhdr}
-\usepackage{titling}
 \usepackage{titlesec}
-\usepackage{grffile}
-\usepackage{catchfile}
 
-% ============================================================
-% CONFIGURAÇÕES DE PÁGINA E ESTILO
-% ============================================================
+% ----------------------------
+% Fallbacks de fontes (texto e matemática)
+% ----------------------------
+% Texto serif
+\IfFontExistsTF{Times New Roman}{
+  \setmainfont{Times New Roman}
+}{
+  \IfFontExistsTF{TeX Gyre Termes}{
+    \setmainfont{TeX Gyre Termes}
+  }{
+    \setmainfont{Latin Modern Roman}
+  }
+}
+
+% Texto sans
+\IfFontExistsTF{Arial}{
+  \setsansfont{Arial}
+}{
+  \IfFontExistsTF{TeX Gyre Heros}{
+    \setsansfont{TeX Gyre Heros}
+  }{
+    \setsansfont{Latin Modern Sans}
+  }
+}
+
+% Texto mono
+\IfFontExistsTF{Consolas}{
+  \setmonofont{Consolas}
+}{
+  \IfFontExistsTF{Inconsolata}{
+    \setmonofont{Inconsolata}
+  }{
+    \setmonofont{Latin Modern Mono}
+  }
+}
+
+% Matemática (ordem: XITS → TG Termes Math → Latin Modern Math)
+\IfFontExistsTF{XITS Math}{
+  \setmathfont{XITS Math}
+}{
+  \IfFontExistsTF{TeX Gyre Termes Math}{
+    \setmathfont{TeX Gyre Termes Math}
+  }{
+    \setmathfont{Latin Modern Math}
+  }
+}
+
+% ----------------------------
+% Layout e estilo
+% ----------------------------
 \geometry{a4paper, margin=2.5cm}
 \onehalfspacing
 
-% Cabeçalho e rodapé
 \pagestyle{fancy}
 \fancyhf{}
 \lhead{UFABC — Aproximação Teórica e Numérica I}
 \rhead{\thepage}
 \renewcommand{\headrulewidth}{0.4pt}
-\renewcommand{\footrulewidth}{0pt}
 
-% Cores e links
 \definecolor{ufabcgreen}{RGB}{0,102,51}
 \hypersetup{
-    colorlinks=true,
-    linkcolor=ufabcgreen,
-    urlcolor=ufabcgreen,
-    citecolor=ufabcgreen,
-    pdfauthor={Rodrigo Fassa et al.},
-    pdftitle={Projeto 1 — Aproximação Teórica e Numérica I}
+  colorlinks=true,
+  linkcolor=ufabcgreen,
+  urlcolor=ufabcgreen,
+  citecolor=ufabcgreen,
+  pdfauthor={Rodrigo Fassa et al.},
+  pdftitle={Projeto 1 — Aproximação Teórica e Numérica I}
 }
 
-% Títulos em verde UFABC
 \titleformat{\section}{\large\bfseries\color{ufabcgreen}}{\thesection.}{0.5em}{}
 \titleformat{\subsection}{\normalsize\bfseries\color{ufabcgreen}}{\thesubsection}{0.5em}{}
 
-% Capa personalizada
-\pretitle{
-    \begin{center}
-    \vspace*{3cm}
-    \includegraphics[width=0.25\textwidth]{logo_ufabc.png}\\[1.5cm]
-    \LARGE\bfseries
-}
-\posttitle{
-    \end{center}
-    \vspace{1cm}
-}
-\setlength{\droptitle}{-2cm}
-
-% ============================================================
-% CORREÇÕES PANDOC E SUPORTE DE IMAGENS
-% ============================================================
-
-% 1. Corrige "No counter 'none' defined"
+% ----------------------------
+% Correções Pandoc
+% ----------------------------
 \makeatletter
 \@ifundefined{c@none}{\newcounter{none}}{}
 \makeatother
 
-% 2. Extensões reconhecidas de imagens
-\makeatletter
-\def\Gin@extensions{.pdf,.png,.jpg,.jpeg,.eps}
-\makeatother
-
-% 3. Suporte a \pandocbounded (Pandoc 3.x)
-\makeatletter
 \newcommand{\pandocbounded}[1]{#1}
-\makeatother
-
-% 4. Corrige erro de listas (\tightlist)
 \providecommand{\tightlist}{%
   \setlength{\itemsep}{0pt}\setlength{\parskip}{0pt}}
 
 % ============================================================
-% DOCUMENTO
+% Documento
 % ============================================================
 \begin{document}
 
-% CAPA
 \title{
 Projeto 1 — Aproximação Teórica e Numérica I\\[0.5cm]
 \large Estudo sobre a Convergência de Splines Cúbicos Interpoladores
@@ -123,14 +132,11 @@ Vinicius Dias Braulino            & \textbf{RA:} 11202231886
 \thispagestyle{empty}
 \newpage
 
-% SUMÁRIO
 \tableofcontents
 \newpage
 
-% CONTEÚDO DO PANDOC
 $body$
 
-% RODAPÉ INSTITUCIONAL
 \vfill
 \begin{center}
 {\footnotesize
