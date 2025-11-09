@@ -184,14 +184,184 @@ def ajuste_ordem_convergencia(results, titulo="Spline Cúbico"):
 
     return rho
 
-from tarefas import tarefa_convergencia_completa, ajuste_ordem_convergencia
+import datetime
+from pathlib import Path
 import numpy as np
 
-f  = np.cos
-df = lambda x: -np.sin(x)
-a, b = 0.0, np.pi / 2
-ns = [4, 8, 16, 32, 64]
+from pathlib import Path
+import datetime
 
-results = tarefa_convergencia_completa(f, df, a, b, ns)
-rho = ajuste_ordem_convergencia(results, titulo="Spline Completo")
-print(f"Ordem estimada: ρ ≈ {rho:.3f}")
+def gerar_relatorio(results_natural, results_completo, rho_natural, rho_completo,
+                    fig_nat="convergencia_natural.png", fig_comp="convergencia_completo.png"):
+    """
+    Gera report.md com formatação compatível com Pandoc/pdflatex.
+    - Usa raw strings (r'...' ou r'''...''') nos blocos com LaTeX.
+    - Tabelas usam $E_n$; letras gregas aparecem como $\rho$; ~ sempre em modo math.
+    """
+    data = datetime.date.today().strftime("%d/%m/%Y")
+
+    # Cabeçalho SEM LaTeX → f-string ok
+    md = f"""# Projeto 1 — Aproximação Teórica e Numérica I
+### Estudo sobre a Convergência de Splines Cúbicos Interpoladores
+**Autor:** Rodrigo Fassa et al.  
+**Orientador:** Prof. André Pierro de Camargo  
+**Data:** {data}
+
+---
+
+"""
+
+    # Bloco com LaTeX → raw string (r"""...""")
+    md += r"""## 1. Introdução
+
+Este relatório apresenta o estudo numérico da convergência de *splines cúbicos interpoladores*,
+verificando empiricamente a ordem de convergência teórica do método.
+Se $f \in C^4[a,b]$, o erro máximo satisfaz:
+$$
+E_n = \max_{x \in [a,b]} |f(x) - S(x)| \approx C\,h^4.
+$$
+
+---
+
+## 2. Metodologia
+
+As rotinas foram implementadas em Python seguindo o pseudocódigo do enunciado.
+Principais funções:
+
+| Módulo     | Função                         | Descrição                                   |
+|:-----------|:-------------------------------|:--------------------------------------------|
+| `spline.py`| `build_tridiagonal_system`     | Monta o sistema $T\cdot M=d$                |
+| `gauss.py` | `solve_by_gaussian_elimination`| Resolve o sistema linear                    |
+| `spline.py`| `compute_M`, `compute_AB`, `spline_eval` | Segundas derivadas e avaliação       |
+| `tarefas.py`| `tarefa_convergencia_*`       | Experimentos de convergência                |
+| `tarefas.py`| `ajuste_ordem_convergencia`   | Estima $\rho$ por regressão log–log         |
+
+Validação em $f(x)=\cos(x)$, no intervalo $[0,\pi/2]$,
+com condições de contorno **natural** e **completa**.
+
+---
+
+## 3. Resultados Numéricos
+
+### 3.1 Spline Natural
+
+| n | h | $E_n$ |
+|--:|--:|--:|
+"""
+
+    # Tabela Natural (sem LaTeX novo aqui; só números)
+    for n, h, E in results_natural:
+        md += f"| {n:3d} | {h:10.6f} | {E:12.6e} |\n"
+
+    md += f"""
+**Ordem estimada:** $\\rho \\approx {rho_natural:.2f}$
+
+---
+
+### 3.2 Spline Completo
+
+| n | h | $E_n$ |
+|--:|--:|--:|
+"""
+
+    for n, h, E in results_completo:
+        md += f"| {n:3d} | {h:10.6f} | {E:12.6e} |\n"
+
+    md += f"""
+**Ordem estimada:** $\\rho \\approx {rho_completo:.2f}$
+
+---
+
+### 3.3 Gráficos log–log
+"""
+
+    # Imagens: só referencia se existir no disco (evita warning do Pandoc)
+    if Path(fig_nat).exists():
+        md += f"**Spline Natural**\n\n![Convergência (Natural)]({fig_nat})\n\n"
+    else:
+        md += "_Figura do natural não encontrada no diretório._\n\n"
+
+    if Path(fig_comp).exists():
+        md += f"**Spline Completo**\n\n![Convergência (Completo)]({fig_comp})\n\n"
+    else:
+        md += "_Figura do completo não encontrada no diretório._\n\n"
+
+    md += r"""
+---
+
+## 4. Discussão e Conclusão
+
+O spline natural apresentou erro com tendência $E_n \sim h^2$,
+enquanto o spline completo atingiu a convergência teórica de quarta ordem ($\rho \approx 4$),
+evidenciando a importância das condições de contorno no desempenho global.
+
+**Conclusão:** o spline cúbico completo é um método de alta precisão para interpolação suave.
+
+---
+"""
+
+    Path("report.md").write_text(md, encoding="utf-8")
+    print("✅ report.md gerado com sucesso.")
+
+import subprocess
+from pathlib import Path
+import shutil
+
+def gerar_pdf(template_tex: str | None = "ufabc-template.tex"):
+    """
+    Converte report.md em report.pdf via Pandoc.
+    Usa template LaTeX se presente; caso contrário, usa o padrão.
+    """
+    from pathlib import Path
+    import subprocess
+    import shutil
+
+    md_path = Path("report.md")
+    pdf_path = Path("report.pdf")
+
+    if not md_path.exists():
+        print("❌ report.md não encontrado. Gere o relatório antes.")
+        return
+
+    pandoc = shutil.which("pandoc")
+    if pandoc is None:
+        print("❌ Pandoc não encontrado no PATH. Instale Pandoc e MiKTeX.")
+        return
+
+    args = [
+        pandoc,
+        str(md_path),
+        "-o", str(pdf_path),
+        "--from", "markdown+tex_math_dollars",
+        "--pdf-engine=pdflatex",
+        "--toc",
+        "--number-sections",
+        "--variable", "tables-use-longtable=false",  # 👈 ESSA LINHA É A CHAVE
+    ]
+    if template_tex and Path(template_tex).exists():
+        args += ["--template", template_tex]
+
+    print("🛠️  Gerando PDF com Pandoc...")
+    subprocess.run(args, check=True)
+    print(f"✅ PDF gerado com sucesso em {pdf_path.resolve()}")
+
+
+gerar_pdf()
+# from tarefas import tarefa_convergencia, tarefa_convergencia_completa, ajuste_ordem_convergencia, gerar_relatorio
+# import numpy as np
+
+# f  = np.cos
+# df = lambda x: -np.sin(x)
+# a, b = 0.0, np.pi/2
+# ns = [4, 8, 16, 32, 64]
+
+# # Natural
+# results_nat = tarefa_convergencia(f, a, b, ns)
+# rho_nat = ajuste_ordem_convergencia(results_nat, "Spline Natural")
+
+# # Completo
+# results_compl = tarefa_convergencia_completa(f, df, a, b, ns)
+# rho_compl = ajuste_ordem_convergencia(results_compl, "Spline Completo")
+
+# # Gera o relatório final
+# gerar_relatorio(results_nat, results_compl, rho_nat, rho_compl, figura_loglog="convergencia.png")
