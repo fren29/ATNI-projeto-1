@@ -346,7 +346,42 @@ def gerar_pdf(template_tex: str | None = "ufabc-template.tex"):
     print(f"✅ PDF gerado com sucesso em {pdf_path.resolve()}")
 
 
-gerar_pdf()
+#gerar_pdf()
+
+
+def tarefa_tabela1():
+    """
+    Tarefa 1 — Tabela 1 do Enunciado (Prof. André Pierro, UFABC 2025)
+    -----------------------------------------------------------------
+    Reproduz os valores dados no PDF do projeto (Tabela 1) e avalia
+    o spline cúbico interpolador (condição natural).
+
+    Dados:
+        xᵢ = [-0.9, -0.83, -0.6, -0.49, 0.0, 0.2, 0.6, 0.83]
+        yᵢ = [0.0, 1.0, 2.4, 4.1, 6.0, 8.2, 10.6, 13.4]
+
+    Objetivo:
+        - Montar o spline cúbico natural.
+        - Avaliar S(x) em pontos intermediários.
+        - Imprimir tabela de valores interpolados.
+    """
+    import numpy as np
+    from spline import spline_function
+
+    x = [-0.9, -0.83, -0.6, -0.49, 0.0, 0.2, 0.6, 0.83]
+    y = [0.0, 1.0, 2.4, 4.1, 6.0, 8.2, 10.6, 13.4]
+
+    S = spline_function(x, y, bc="natural")
+
+    print("\n=== Tarefa 1 — Tabela 1 do Enunciado ===")
+    print(f"{'x':>8} | {'S(x)':>12}")
+    print("-" * 24)
+
+    xs_test = np.linspace(min(x), max(x), 15)
+    for xi in xs_test:
+        print(f"{xi:8.3f} | {S(xi):12.6f}")
+tarefa_tabela1()
+
 # from tarefas import tarefa_convergencia, tarefa_convergencia_completa, ajuste_ordem_convergencia, gerar_relatorio
 # import numpy as np
 
