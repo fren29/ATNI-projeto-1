@@ -1,3 +1,4 @@
+import numpy as np
 from gauss import solve_by_gaussian_elimination
 
 
@@ -146,52 +147,37 @@ def compute_AB(x, y, M):
 from bsearch import find_interval
 
 def spline_eval(x, y, M, A, B, x_star, locator=find_interval):
-    """
-    Avalia o spline cúbico interpolador em um ponto x_star.
-
-    Origem: Eq. (1) — PDF (p. 2)
-
-    Para o subintervalo [x_i, x_{i+1}] tal que x_i ≤ x_star ≤ x_{i+1}:
-        S_i(x) = (M_i*(x_{i+1}-x)^3)/(6*h_i)
-                + (M_{i+1}*(x-x_i)^3)/(6*h_i)
-                + ((y_i/h_i) - (M_i*h_i)/6)*(x_{i+1}-x)
-                + ((y_{i+1}/h_i) - (M_{i+1}*h_i)/6)*(x-x_i)
-
-    Parâmetros
-    ----------
-    x, y, M, A, B : listas do spline
-    x_star : float
-        Ponto a avaliar
-    locator : callable
-        Função para localizar o índice i tal que x ∈ [x_i, x_{i+1}]
-        Padrão: bsearch.find_interval
-
-    Retorno
-    -------
-    Sx : float
-        Valor do spline em x_star
-    """
     n = len(x) - 1
+
     if not (len(y) == len(M) == len(x)):
         raise ValueError("x, y e M devem ter o mesmo comprimento.")
     if len(A) != n or len(B) != n:
         raise ValueError("A e B devem ter n elementos (n = len(x)-1).")
-    if not (x[0] <= x_star <= x[-1]):
-        raise ValueError(f"x_star={x_star} fora do domínio [{x[0]}, {x[-1]}].")
 
-    i = locator(x, x_star)  # índice tal que x[i] ≤ x_star ≤ x[i+1]
-    hi = x[i+1] - x[i]
-    xi, xi1 = x[i], x[i+1]
-    yi, yi1 = y[i], y[i+1]
-    Mi, Mi1 = M[i], M[i+1]
+    # Vetorização: aceita escalar ou array
+    x_star = np.atleast_1d(x_star)
+    results = []
 
-    term1 = Mi * (xi1 - x_star)**3 / (6.0 * hi)
-    term2 = Mi1 * (x_star - xi)**3 / (6.0 * hi)
-    term3 = (yi / hi - Mi * hi / 6.0) * (xi1 - x_star)
-    term4 = (yi1 / hi - Mi1 * hi / 6.0) * (x_star - xi)
+    for xx in x_star:
+        if not (x[0] <= xx <= x[-1]):
+            raise ValueError(f"x_star={xx} fora do domínio [{x[0]}, {x[-1]}].")
 
-    Sx = term1 + term2 + term3 + term4
-    return Sx
+        i = locator(x, xx)
+        xi, xi1 = x[i], x[i+1]
+        yi, yi1 = y[i], y[i+1]
+        Mi, Mi1 = M[i], M[i+1]
+        hi = xi1 - xi
+
+        term1 = Mi * (xi1 - xx)**3 / (6.0 * hi)
+        term2 = Mi1 * (xx - xi)**3 / (6.0 * hi)
+        term3 = (yi / hi - Mi * hi / 6.0) * (xi1 - xx)
+        term4 = (yi1 / hi - Mi1 * hi / 6.0) * (xx - xi)
+
+        results.append(term1 + term2 + term3 + term4)
+
+    results = np.array(results)
+    # Retorna escalar se entrada era escalar
+    return results[0] if results.size == 1 else results
 
 
 def spline_function(x, y, bc="natural", ypp0=0.0, yppn=0.0, solver=solve_by_gaussian_elimination):
