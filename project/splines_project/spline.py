@@ -4,25 +4,18 @@ from gauss import solve_by_gaussian_elimination
 
 def build_tridiagonal_system(x, y, bc="natural", ypp0=0.0, yppn=0.0):
     """
-    Monta o sistema linear tridiagonal T·M = d do spline cúbico interpolador.
-
-    Origem: Eq. (2) — PDF (λ_i, μ_i, d_i). Para i = 1..n-1 (n = len(x)-1):
-        μ_i M_{i-1} + 2 M_i + λ_i M_{i+1} = d_i
-        μ_i = h_i / (h_{i-1} + h_i),  λ_i = h_{i-1} / (h_{i-1} + h_i)
-        d_i = 6 * [ ( (y_{i+1}-y_i)/h_i ) - ( (y_i - y_{i-1})/h_{i-1} ) ] / (h_{i-1}+h_i)
-
-    Condições de contorno:
-      - bc == "natural": M_0 = 0, M_n = 0 (ou valores dados por ypp0,yppn).
-      - bc == "complete": usa M_0 = ypp0 e M_n = yppn (segunda derivada conhecida).
-    Em ambos os casos, impomos linhas identidade nas bordas.
+    Monta o sistema tridiagonal T·M = d para o spline cúbico interpolador.
 
     Parâmetros
     ----------
-    x, y : sequências de floats com mesmo tamanho (n+1)
-    bc : "natural" ou "complete"
-    ypp0, yppn : valores de M_0 e M_n quando especificados
+    x, y : sequências de floats com o mesmo tamanho (n+1)
+    bc   : "natural"  -> impõe M0 = 0 e Mn = 0
+           "complete" -> impõe derivadas primeiras nas bordas:
+                         S'(a)=ypp0, S'(b)=yppn  (ypp0, yppn = f'(a), f'(b))
+    ypp0, yppn : floats
+        Se bc="complete", são f'(a) e f'(b). Ignorados em "natural".
 
-    Retorno
+    Retorna
     -------
     T : list[list[float]]  (matriz (n+1)×(n+1))
     d : list[float]        (vetor (n+1))
@@ -30,33 +23,47 @@ def build_tridiagonal_system(x, y, bc="natural", ypp0=0.0, yppn=0.0):
     n = len(x) - 1
     if n < 1 or len(y) != len(x):
         raise ValueError("x e y devem ter o mesmo tamanho e conter ao menos dois pontos.")
+
     # passos h_i
     h = [x[i+1] - x[i] for i in range(n)]
     if any(hi <= 0 for hi in h):
         raise ValueError("x deve ser estritamente crescente.")
 
-    size = n + 1
-    T = [[0.0]*(size) for _ in range(size)]
-    d = [0.0]*(size)
+    T = [[0.0]*(n+1) for _ in range(n+1)]
+    d = [0.0]*(n+1)
 
-    # bordas: identidade + valores conforme bc
-    T[0][0] = 1.0
-    T[n][n] = 1.0
-    d[0] = 0.0 if bc == "natural" else float(ypp0)
-    d[n] = 0.0 if bc == "natural" else float(yppn)
-    if bc == "natural" and (ypp0 != 0.0 or yppn != 0.0):
-        # permite natural com valores explícitos nas bordas
-        d[0] = float(ypp0)
-        d[n] = float(yppn)
+    # --- Condições de contorno ---
+    if bc == "natural":
+        # M0 = 0, Mn = 0
+        T[0][0] = 1.0
+        T[n][n] = 1.0
+        d[0] = 0.0
+        d[n] = 0.0
 
-    # equações internas i=1..n-1
+    elif bc == "complete":
+        # Bordas com derivadas S'(a)=ypp0 e S'(b)=yppn
+        # 2*h0*M0 + h0*M1 = 6[(y1-y0)/h0 - S'(a)]
+        T[0][0] = 2.0 * h[0]
+        T[0][1] = 1.0 * h[0]
+        d[0]    = 6.0 * ((y[1] - y[0]) / h[0] - float(ypp0))
+
+        # hn-1*Mn-1 + 2*hn-1*Mn = 6[S'(b) - (yn - y{n-1})/hn-1]
+        T[n][n-1] = 1.0 * h[-1]
+        T[n][n]   = 2.0 * h[-1]
+        d[n]      = 6.0 * (float(yppn) - (y[-1] - y[-2]) / h[-1])
+
+    else:
+        raise ValueError("bc deve ser 'natural' ou 'complete'.")
+
+    # --- Equações internas (i = 1..n-1) ---
     for i in range(1, n):
         him1 = h[i-1]
-        hi = h[i]
+        hi   = h[i]
         denom = him1 + hi
-        mu = hi / denom
-        lam = him1 / denom
-        rhs = 6.0 * ( (y[i+1]-y[i])/hi - (y[i]-y[i-1])/him1 ) / denom
+
+        mu  = hi   / denom   # coeficiente de M_{i-1}
+        lam = him1 / denom   # coeficiente de M_{i+1}
+        rhs = 6.0 * ( (y[i+1] - y[i]) / hi - (y[i] - y[i-1]) / him1 ) / denom
 
         T[i][i-1] = mu
         T[i][i]   = 2.0
@@ -64,6 +71,7 @@ def build_tridiagonal_system(x, y, bc="natural", ypp0=0.0, yppn=0.0):
         d[i] = rhs
 
     return T, d
+
 
 
 def compute_M(T, d, solver=solve_by_gaussian_elimination):
