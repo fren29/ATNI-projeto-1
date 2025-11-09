@@ -35,9 +35,26 @@ def make_uniform_mesh(a, b, n):
     return np.linspace(a, b, n + 1)
 
 def sup_error(f, g, xs):
-    """||f - g||_∞ discreto nos pontos xs."""
-    # TODO
-    pass
+    """
+    Calcula o erro máximo discreto entre duas funções f e g
+    nos pontos fornecidos em xs.
+
+    Parâmetros
+    ----------
+    f, g : callables
+        Funções reais de uma variável.
+    xs : array-like
+        Pontos onde f e g serão comparadas.
+
+    Retorno
+    -------
+    E : float
+        Erro máximo discreto: max |f(x) - g(x)|.
+    """
+    xs = np.asarray(xs, dtype=float)
+    diffs = np.abs(f(xs) - g(xs))
+    return float(np.max(diffs))
+
 
 # Teste 1: validação de ordem
 x = [0, 1, 2, 3]
@@ -52,3 +69,10 @@ except ValueError:
 xs = make_uniform_mesh(0, 1, 4)
 print(xs)
 # Esperado: [0.   0.25 0.5  0.75 1.  ]
+
+f = np.cos
+g = lambda x: np.cos(x) + 1e-3*np.sin(5*x)
+xs = np.linspace(0, np.pi, 1000)
+
+E = sup_error(f, g, xs)
+print("Erro máximo:", E)

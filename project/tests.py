@@ -137,6 +137,15 @@ def test_make_uniform_mesh_basic():
     expected = np.array([0.0, 0.25, 0.5, 0.75, 1.0])
     assert np.allclose(xs, expected)
 
+def test_sup_error_cosine():
+    import numpy as np
+    from splines_project.utils import sup_error
+    f = np.cos
+    g = lambda x: np.cos(x) + 0.001
+    xs = np.linspace(0, np.pi, 100)
+    E = sup_error(f, g, xs)
+    assert abs(E - 0.001) < 1e-6
+
 
 def run_all():
     # chama todas as funções que começam com test_
